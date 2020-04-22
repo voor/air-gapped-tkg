@@ -57,6 +57,7 @@ resource "aws_subnet" "private_subnet" {
   tags = merge(
     var.tags,
     { Name = "${var.environment_name}-private-subnet-${count.index}" },
+    { "kubernetes.io/role/internal-elb" = "1" }
   )
 }
 
@@ -64,6 +65,16 @@ resource "aws_vpc_endpoint" "ec2" {
 
   vpc_id              = aws_vpc.vpc.id
   service_name        = "com.amazonaws.${var.region}.ec2"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = aws_subnet.private_subnet.*.id
+  private_dns_enabled = true
+  security_group_ids  = [aws_security_group.infrastructure_security_group.id]
+}
+
+resource "aws_vpc_endpoint" "ec2messages" {
+
+  vpc_id              = aws_vpc.vpc.id
+  service_name        = "com.amazonaws.${var.region}.ec2messages"
   vpc_endpoint_type   = "Interface"
   subnet_ids          = aws_subnet.private_subnet.*.id
   private_dns_enabled = true
@@ -112,7 +123,7 @@ resource "aws_security_group" "infrastructure_security_group" {
     to_port     = 0
   }
 
-  tags = "${merge(var.tags, map("Name", "${var.environment_name}-infrastructure-security-group"))}"
+  tags = merge(var.tags, map("Name", "${var.environment_name}-infrastructure-security-group"))
 }
 
 
@@ -122,7 +133,8 @@ resource "aws_security_group" "infrastructure_security_group" {
 data "aws_ami" "amazon_linux_hvm_ami" {
   most_recent = true
 
-  name_regex = "^amzn2-ami-hvm-[0-9.]+-x86_64-ebs$"
+  # We add ecs so that it has docker installed already.
+  name_regex = "^amzn2-ami-ecs-hvm-[0-9.]+-x86_64-ebs$"
 
   owners = ["amazon"]
 }

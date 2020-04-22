@@ -38,6 +38,22 @@ data "aws_iam_policy_document" "packer" {
     ]
     resources = ["*"]
   }
+
+  statement {
+    actions = [
+      "ssm:UpdateInstanceInformation",
+      "ssmmessages:CreateControlChannel",
+      "ssmmessages:CreateDataChannel",
+      "ssmmessages:OpenControlChannel",
+      "ssmmessages:OpenDataChannel",
+      "s3:GetEncryptionConfiguration"
+    ]
+    resources = [
+      "*"
+    ]
+    effect = "Allow"
+
+  }
 }
 
 resource "aws_iam_policy" "packer" {
@@ -52,7 +68,7 @@ resource "aws_iam_role" "packer" {
     create_before_destroy = true
   }
 
-  assume_role_policy = "${data.aws_iam_policy_document.assume_role_policy.json}"
+  assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
 }
 
 resource "aws_iam_role_policy_attachment" "packer-packer" {
