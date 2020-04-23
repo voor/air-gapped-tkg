@@ -221,6 +221,7 @@ locals {
   templatefile_vars = {
     variables_json = jsonencode(local.variables_json)
     ami_id = data.aws_ami.amazon_linux_hvm_ami.id
+    artifacts_endpoint = aws_s3_bucket.artifacts.website_endpoint
   }
 
 

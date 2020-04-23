@@ -31,26 +31,9 @@ docker save ami-image-builder | gzip > ami-image-builder.tar.gz
 ```
 
 
-Jump onto the box and build the AMI:
+Jump onto the box, load the docker file, and build the AMI:
 
 ```
-docker load -i ami-image-builder.tar.gz
-export MACHINE_OS="amazon-2"
-docker run \
-    --net host -it --rm \
-    --name ami-builder \
-    -e "MACHINE_OS=${MACHINE_OS}" \
-    -v `pwd`/packer/kubernetes.json:/image-builder/images/capi/packer/config/kubernetes.json \
-    -v `pwd`/packer/cni.json:/image-builder/images/capi/packer/config/cni.json \
-    -v `pwd`/packer/ami-default.json:/image-builder/images/capi/packer/ami/ami-default.json \
-    -v `pwd`/packer/import.sh:/tmp/import.sh \
-    -v `pwd`/packer/kubeadmpull.yml:/image-builder/images/capi/ansible/roles/kubernetes/tasks/kubeadmpull.yml \
-    ami-image-builder \
-    packer build \
-    -only=${MACHINE_OS} \
-    -var-file=/image-builder/images/capi/packer/config/kubernetes.json \
-    -var-file=/image-builder/images/capi/packer/config/cni.json \
-    -var-file=/image-builder/images/capi/packer/config/containerd.json \
-    -var-file=/image-builder/images/capi/packer/config/ansible-args.json \
-    -var-file=/image-builder/images/capi/packer/ami/ami-default.json \
-    /image-builder/images/capi/packer/ami/packer.json
+./load-docker.sh
+./build-ami.sh
+```
