@@ -27,3 +27,4 @@ override.tf.json
 # Specific
 tkg_release/
 ami-image-builder.tar.gz
+goss-linux-amd64

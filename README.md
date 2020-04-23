@@ -23,13 +23,15 @@ Everything we'll need will go into the S3 bucket.  The only exceptions are needi
 Put the following into the S3 bucket:
  * Tanzu Kubernetes Grid release tgz file.
 
-Now build the image-builder container that will run packer inside the environment, then save it out, then transfer it.
+Now build the image-builder container that will run packer inside the environment, then save it out, then transfer it.  Transfer all the other files you'll need.
 
 ```shell
 docker build -t ami-image-builder -f ami-builder.dockerfile . \
   && docker save ami-image-builder | gzip > ami-image-builder.tar.gz
 aws --profile gov s3 cp ami-image-builder.tar.gz s3://$(terraform output artifact_bucket)/builders/
 aws --profile gov s3 sync ~/Downloads/tkg_release/ s3://$(terraform output artifact_bucket)/packages/ --exclude "*" --include "*.rpm" --exclude "*.src.rpm" --include "*/images/*" --include "*/images/*" --include "*cri-containerd*"
+curl -O -SsL https://github.com/aelsabbahy/goss/releases/download/v0.3.2/goss-linux-amd64
+aws --profile gov s3 cp goss-linux-amd64 s3://$(terraform output artifact_bucket)/builders/
 ```
 
 
