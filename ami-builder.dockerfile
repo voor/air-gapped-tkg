@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y apt-transport-https ca-certificates ans
     && chmod +x /usr/local/bin/packer-provisioner-goss \
     && curl -sL https://releases.hashicorp.com/packer/1.4.5/packer_1.4.5_linux_amd64.zip -o /tmp/packer.zip; unzip /tmp/packer.zip; mv packer /usr/local/bin/packer \
     && rm -rf /tmp/packer.zip \
-    && git clone https://github.com/kubernetes-sigs/image-builder.git; cd /image-builder; git checkout ffe8c664; chmod -R 0777 /image-builder \
+    && git clone https://github.com/voor/image-builder.git; cd /image-builder; git checkout air-gapped-ansible; chmod -R 0777 /image-builder \
     && useradd -ms /bin/bash ansible \
     && apt-get purge --auto-remove -y \
     && rm -rf /var/lib/apt/lists/*

@@ -231,11 +231,16 @@ locals {
     kubernetes_semver      = "v1.17.3-vmware.2"
     kubernetes_rpm_version = local.kubernetes_rpm_version
 
+    kubernetes_source_type = "s3"
+
     common_redhat_epel_rpm = "${local.endpoint}/rpms/cri-tools-1.16.1-1.el7.vmware.3.x86_64.rpm"
 
     containerd_url = "${local.endpoint}/containerd-v1.3.3+vmware.1/executables/cri-containerd-v1.3.3+vmware.1.linux-amd64.tar.gz"
+    containerd_sha256 = "4aed1fd2803525b84700ac427c10e8b7cf0766cc71bc470ff564785432ddf550"
 
     extra_rpms = "\"${join(" ", local.rpms)}\""
+
+    goss_url = "${local.endpoint}/builders/goss-linux-amd64"
   }
 
   templatefile_vars = {
