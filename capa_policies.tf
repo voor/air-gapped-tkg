@@ -242,3 +242,47 @@ data "aws_iam_policy_document" "assume_role_policy" {
     }
   }
 }
+
+data "aws_iam_policy_document" "cds-endpoint-policy" {
+  statement {
+    sid = "AccessToPackagesBucket"
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+    actions = [
+      "*"
+    ]
+    resources = [
+      "arn:aws-us-gov:s3:::${var.environment_name}-packages-artifacts-${random_string.bucket_suffix.result}",
+      "arn:aws-us-gov:s3:::${var.environment_name}-packages-artifacts-${random_string.bucket_suffix.result}/*",
+      "arn:aws-us-gov:s3:::amazonlinux.${var.region}.amazonaws.com",
+      "arn:aws-us-gov:s3:::amazonlinux.${var.region}.amazonaws.com/*"
+    ]
+    effect = "Allow"
+  }
+}
+
+data "aws_iam_policy_document" "s3_artifacts_policy" {
+  statement {
+    sid    = "OnlyVPCEAccess"
+    effect = "Allow"
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+    actions = [
+      "s3:*"
+    ]
+    resources = [
+      "arn:aws-us-gov:s3:::${var.environment_name}-packages-artifacts-${random_string.bucket_suffix.result}/*",
+      "arn:aws-us-gov:s3:::${var.environment_name}-packages-artifacts-${random_string.bucket_suffix.result}",
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:sourceVpce"
+      values   = [aws_vpc_endpoint.s3.id]
+
+    }
+  }
+}

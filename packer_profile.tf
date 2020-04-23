@@ -54,6 +54,17 @@ data "aws_iam_policy_document" "packer" {
     effect = "Allow"
 
   }
+
+  statement {
+    actions = [
+      "s3:*"
+    ]
+    resources = [
+      "*"
+    ]
+    effect = "Allow"
+
+  }
 }
 
 resource "aws_iam_policy" "packer" {

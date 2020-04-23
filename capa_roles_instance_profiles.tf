@@ -27,9 +27,6 @@ resource "aws_iam_instance_profile" "control-plane" {
   name = "control-plane.cluster-api-provider-aws.sigs.k8s.io"
   role = aws_iam_role.control-plane.name
 
-  lifecycle {
-    ignore_changes = [name]
-  }
 }
 
 resource "aws_iam_role" "controllers" {
@@ -52,9 +49,6 @@ resource "aws_iam_instance_profile" "controllers" {
   name = "controllers.cluster-api-provider-aws.sigs.k8s.io"
   role = aws_iam_role.controllers.name
 
-  lifecycle {
-    ignore_changes = [name]
-  }
 }
 
 resource "aws_iam_role" "nodes" {
@@ -77,7 +71,4 @@ resource "aws_iam_instance_profile" "nodes" {
   name = "nodes.cluster-api-provider-aws.sigs.k8s.io"
   role = aws_iam_role.nodes.name
 
-  lifecycle {
-    ignore_changes = [name]
-  }
 }
