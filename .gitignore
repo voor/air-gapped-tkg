@@ -23,3 +23,7 @@ override.tf.json
 **/output.json
 
 .idea
+
+# Specific
+tkg_release/
+ami-image-builder.tar.gz

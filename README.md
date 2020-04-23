@@ -10,7 +10,7 @@ region = "us-gov-east-1"
 availability_zones = ["us-gov-east-1a", "us-gov-east-1b", "us-gov-east-1c"]
 ```
 
-```
+```shell
 terraform init
 terraform plan -out=main.tfplan
 terraform apply "main.tfplan"
@@ -25,15 +25,23 @@ Put the following into the S3 bucket:
 
 Now build the image-builder container that will run packer inside the environment, then save it out, then transfer it.
 
-```
+```shell
 docker build -t ami-image-builder -f ami-builder.dockerfile .
 docker save ami-image-builder | gzip > ami-image-builder.tar.gz
+aws --profile gov s3 cp ami-image-builder.tar.gz s3://$(terraform output artifact_bucket)
+aws --profile gov s3 sync tkg_release/ s3://$(terraform output artifact_bucket)
 ```
 
 
 Jump onto the box, load the docker file, and build the AMI:
 
+```shell
+# Assumes you have properly configured SSM for ssh tunneling.
+ssh ec2-user@$(terraform output packer_instance_id)
 ```
+
+```shell
+sudo su -
 ./load-docker.sh
 ./build-ami.sh
 ```

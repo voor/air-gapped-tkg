@@ -165,6 +165,11 @@ resource "aws_s3_bucket" "artifacts" {
 
 }
 
+output "artifact_bucket" {
+  value = aws_s3_bucket.artifacts.bucket
+}
+
+
 
 /*
  * Security Groups
@@ -211,16 +216,16 @@ locals {
     subnet_id   = aws_subnet.private_subnet.0.id
     ami_groups  = "all"
 
-    kubernetes_series = "v1.17"
-    kubernetes_semver = "v1.17.3-vmware.2"
+    kubernetes_series      = "v1.17"
+    kubernetes_semver      = "v1.17.3-vmware.2"
     kubernetes_rpm_version = "1.17.3-1.el7.vmware.2"
-    
+
     containerd_url = "${aws_s3_bucket.artifacts.website_endpoint}/tkg_release/containerd-v1.3.3+vmware.1/executables/cri-containerd-v1.3.3+vmware.1.linux-amd64.tar.gz"
   }
 
   templatefile_vars = {
-    variables_json = jsonencode(local.variables_json)
-    ami_id = data.aws_ami.amazon_linux_hvm_ami.id
+    variables_json     = jsonencode(local.variables_json)
+    ami_id             = data.aws_ami.amazon_linux_hvm_ami.id
     artifacts_endpoint = aws_s3_bucket.artifacts.website_endpoint
   }
 
@@ -228,7 +233,7 @@ locals {
 }
 
 output "variables_json" {
-  value     = jsonencode(local.variables_json)
+  value = jsonencode(local.variables_json)
 }
 
 resource "aws_instance" "packer" {
