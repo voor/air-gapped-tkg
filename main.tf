@@ -209,6 +209,17 @@ data "aws_ami" "amazon_linux_hvm_ami" {
 }
 
 locals {
+
+  kubernetes_rpm_version = "1.17.3-1.el7.vmware.2"
+
+  endpoint = "http://${aws_s3_bucket.artifacts.website_endpoint}/packages"
+
+  rpms = [
+    "${local.endpoint}/rpms/kubeadm-${local.kubernetes_rpm_version}.x86_64.rpm",
+    "${local.endpoint}/rpms/kubectl-${local.kubernetes_rpm_version}.x86_64.rpm",
+    "${local.endpoint}/rpms/kubelet-${local.kubernetes_rpm_version}.x86_64.rpm",
+    "${local.endpoint}/rpms/kubernetes-cni-0.7.5-1.el7.vmware.6.x86_64.rpm",
+  ]
   variables_json = {
     aws_region  = var.region
     ami_regions = var.region
@@ -218,9 +229,13 @@ locals {
 
     kubernetes_series      = "v1.17"
     kubernetes_semver      = "v1.17.3-vmware.2"
-    kubernetes_rpm_version = "1.17.3-1.el7.vmware.2"
+    kubernetes_rpm_version = local.kubernetes_rpm_version
 
-    containerd_url = "${aws_s3_bucket.artifacts.website_endpoint}/tkg_release/containerd-v1.3.3+vmware.1/executables/cri-containerd-v1.3.3+vmware.1.linux-amd64.tar.gz"
+    common_redhat_epel_rpm = "${local.endpoint}/rpms/cri-tools-1.16.1-1.el7.vmware.3.x86_64.rpm"
+
+    containerd_url = "${local.endpoint}/containerd-v1.3.3+vmware.1/executables/cri-containerd-v1.3.3+vmware.1.linux-amd64.tar.gz"
+
+    extra_rpms = "\"${join(" ", local.rpms)}\""
   }
 
   templatefile_vars = {

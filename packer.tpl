@@ -18,7 +18,7 @@ _END
 cat > /root/load-docker.sh <<'_END'
 #!/bin/bash
 set -eux
-curl https://${artifacts_endpoint}/ami-image-builder.tar.gz -o - | docker load
+curl http://${artifacts_endpoint}/ami-image-builder.tar.gz -o - | docker load
 
 _END
 chmod +x /root/load-docker.sh

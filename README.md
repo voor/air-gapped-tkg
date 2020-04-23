@@ -26,10 +26,10 @@ Put the following into the S3 bucket:
 Now build the image-builder container that will run packer inside the environment, then save it out, then transfer it.
 
 ```shell
-docker build -t ami-image-builder -f ami-builder.dockerfile .
-docker save ami-image-builder | gzip > ami-image-builder.tar.gz
-aws --profile gov s3 cp ami-image-builder.tar.gz s3://$(terraform output artifact_bucket)
-aws --profile gov s3 sync tkg_release/ s3://$(terraform output artifact_bucket)
+docker build -t ami-image-builder -f ami-builder.dockerfile . \
+  && docker save ami-image-builder | gzip > ami-image-builder.tar.gz
+aws --profile gov s3 cp ami-image-builder.tar.gz s3://$(terraform output artifact_bucket)/builders/
+aws --profile gov s3 sync ~/Downloads/tkg_release/ s3://$(terraform output artifact_bucket)/packages/ --exclude "*" --include "*.rpm" --exclude "*.src.rpm" --include "*/images/*" --include "*/images/*" --include "*cri-containerd*"
 ```
 
 
