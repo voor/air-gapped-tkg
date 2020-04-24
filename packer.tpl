@@ -38,3 +38,23 @@ exec docker run --net host -it --rm --name ami-builder \
   ami-image-builder
 _END
 chmod +x ${INSTANCE_HOME}/build-ami.sh
+
+cat > ${INSTANCE_HOME}/tag-containers.sh <<'_END'
+#!/bin/bash
+set -eux
+
+curl -SsL http://${artifacts_endpoint}/packages/${kind_image} -o - | docker load
+%{ for image in image_names ~}
+curl -SsL http://${artifacts_endpoint}/packages/${image} -o - | docker load
+%{ endfor ~}
+
+COL_ONE=($(docker image list --format "{{.Repository}}:{{.Tag}}" | grep -v ami-image-builder | grep -v kind))
+COL_TWO=($(docker image list --format "{{.Repository}}:{{.Tag}}" | sed 's/registry.tkg.vmware.run/${kubernetes_container_registry}/g' | sed 's/vmware.io/${kubernetes_container_registry}/g' | grep -v ami-image-builder | grep -v kind))
+
+for ((i=0; i<=$${#COL_ONE[@]}; i++)); do
+    docker tag "$${COL_ONE[i]}" "$${COL_TWO[i]}"
+    docker push "$${COL_TWO[i]}"
+done
+
+_END
+chmod +x ${INSTANCE_HOME}/tag-containers.sh

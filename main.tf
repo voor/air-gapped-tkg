@@ -116,6 +116,26 @@ resource "aws_vpc_endpoint" "sts" {
   security_group_ids  = [aws_security_group.infrastructure_security_group.id]
 }
 
+resource "aws_vpc_endpoint" "ecr_dkr" {
+
+  vpc_id              = aws_vpc.vpc.id
+  service_name        = "com.amazonaws.${var.region}.ecr.dkr"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = aws_subnet.private_subnet.*.id
+  private_dns_enabled = true
+  security_group_ids  = [aws_security_group.infrastructure_security_group.id]
+}
+
+resource "aws_vpc_endpoint" "ecr_api" {
+
+  vpc_id              = aws_vpc.vpc.id
+  service_name        = "com.amazonaws.${var.region}.ecr.api"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = aws_subnet.private_subnet.*.id
+  private_dns_enabled = true
+  security_group_ids  = [aws_security_group.infrastructure_security_group.id]
+}
+
 resource "aws_vpc_endpoint" "s3" {
 
   vpc_id            = aws_vpc.vpc.id
@@ -196,6 +216,22 @@ resource "aws_security_group" "infrastructure_security_group" {
   tags = merge(var.tags, map("Name", "${var.environment_name}-infrastructure-security-group"))
 }
 
+variable "containers" {
+  default     = []
+  description = "The list of containers that should be preloaded onto the AMI and accessible at runtime."
+  type        = list
+}
+
+variable "image_names" {
+  default     = []
+  description = "The list images that should be preloaded onto the AMI and accessible at runtime."
+  type        = list
+}
+
+resource "aws_ecr_repository" "kubernetes_container_registry" {
+  count = length(var.containers)
+  name  = basename(element(var.containers, count.index))
+}
 
 /*
  * Packer Builder
@@ -210,9 +246,12 @@ data "aws_ami" "amazon_linux_hvm_ami" {
 
 locals {
 
-  kubernetes_rpm_version = "1.17.3-1.el7.vmware.2"
 
-  endpoint = "https://${aws_s3_bucket.artifacts.website_endpoint}/packages"
+
+  kubernetes_rpm_version        = "1.17.3-1.el7.vmware.2"
+  kubernetes_container_registry = "${element(aws_ecr_repository.kubernetes_container_registry, 0).registry_id}.dkr.ecr.${var.region}.amazonaws.com"
+
+  endpoint = "http://${aws_s3_bucket.artifacts.website_endpoint}/packages"
 
   rpms = [
     "${local.endpoint}/rpms/kubeadm-${local.kubernetes_rpm_version}.x86_64.rpm",
@@ -231,6 +270,8 @@ locals {
     kubernetes_semver      = "v1.17.3-vmware.2"
     kubernetes_rpm_version = local.kubernetes_rpm_version
 
+    kubernetes_container_registry = local.kubernetes_container_registry
+
     kubernetes_source_type = "s3"
 
     common_redhat_epel_rpm = "${local.endpoint}/rpms/cri-tools-1.16.1-1.el7.vmware.3.x86_64.rpm"
@@ -245,21 +286,30 @@ locals {
   }
 
   templatefile_vars = {
-    variables_json     = jsonencode(local.variables_json)
-    ami_id             = data.aws_ami.amazon_linux_hvm_ami.id
-    artifacts_endpoint = aws_s3_bucket.artifacts.website_endpoint
-    ami_image_builder  = aws_s3_bucket_object.ami_image_builder.id
-    INSTANCE_USER      = "ec2-user"
-    INSTANCE_HOME      = "/home/ec2-user"
+    variables_json                = jsonencode(local.variables_json)
+    ami_id                        = data.aws_ami.amazon_linux_hvm_ami.id
+    artifacts_endpoint            = aws_s3_bucket.artifacts.website_endpoint
+    ami_image_builder             = aws_s3_bucket_object.ami_image_builder.id
+    INSTANCE_USER                 = "ec2-user"
+    INSTANCE_HOME                 = "/home/ec2-user"
+    containers                    = var.containers
+    image_names                   = var.image_names
+    kind_image                    = "kind-v0.7.0-1.17.3+vmware.2/images/node-v1.17.3_vmware.2.tar.gz"
+    kubernetes_container_registry = local.kubernetes_container_registry
   }
 
 
 }
 
 output "variables_json" {
-  value = jsonencode(local.variables_json)
+  value     = jsonencode(local.variables_json)
+  sensitive = true
 }
 
+output "template" {
+  value     = templatefile("packer.tpl", local.templatefile_vars)
+  sensitive = true
+}
 resource "aws_instance" "packer" {
 
   ami                  = data.aws_ami.amazon_linux_hvm_ami.id
