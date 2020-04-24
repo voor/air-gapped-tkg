@@ -1,7 +1,5 @@
 #!/bin/bash
 set -eux
-# Helps debug instance startup issues by outputting to the system console.
-exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
 systemctl enable --now amazon-ssm-agent 
 
@@ -18,10 +16,12 @@ _END
 cat > /root/load-docker.sh <<'_END'
 #!/bin/bash
 set -eux
-curl http://${artifacts_endpoint}/builders/ami-image-builder.tar.gz -o - | docker load
+curl http://${artifacts_endpoint}/${ami_image_builder} -o - | docker load
 
 _END
 chmod +x /root/load-docker.sh
+
+./root/load-docker.sh
 
 cat > /root/build-ami.sh <<'_END'
 #!/bin/bash

@@ -224,7 +224,7 @@ locals {
     aws_region  = var.region
     ami_regions = var.region
     vpc_id      = aws_vpc.vpc.id
-    subnet_id   = aws_subnet.private_subnet.0.id
+    subnet_id   = aws_subnet.private_subnet.*.id
     ami_groups  = "all"
 
     kubernetes_series      = "v1.17"
@@ -235,7 +235,7 @@ locals {
 
     common_redhat_epel_rpm = "${local.endpoint}/rpms/cri-tools-1.16.1-1.el7.vmware.3.x86_64.rpm"
 
-    containerd_url = "${local.endpoint}/containerd-v1.3.3+vmware.1/executables/cri-containerd-v1.3.3+vmware.1.linux-amd64.tar.gz"
+    containerd_url    = "${local.endpoint}/containerd-v1.3.3+vmware.1/executables/cri-containerd-v1.3.3+vmware.1.linux-amd64.tar.gz"
     containerd_sha256 = "4aed1fd2803525b84700ac427c10e8b7cf0766cc71bc470ff564785432ddf550"
 
     extra_rpms = "\"${join(" ", local.rpms)}\""
@@ -247,6 +247,7 @@ locals {
     variables_json     = jsonencode(local.variables_json)
     ami_id             = data.aws_ami.amazon_linux_hvm_ami.id
     artifacts_endpoint = aws_s3_bucket.artifacts.website_endpoint
+    ami_image_builder  = aws_s3_bucket_object.ami_image_builder.id
   }
 
 
@@ -298,3 +299,27 @@ terraform {
   required_version = ">= 0.12.0"
 }
 
+/*
+ * Files
+ */
+resource "aws_s3_bucket_object" "ami_image_builder" {
+  bucket = aws_s3_bucket.artifacts.bucket
+  key    = "builders/ami-image-builder.tar.gz"
+  source = "ami-image-builder.tar.gz"
+
+  # The filemd5() function is available in Terraform 0.11.12 and later
+  # For Terraform 0.11.11 and earlier, use the md5() function and the file() function:
+  # etag = "${md5(file("path/to/file"))}"
+  etag = filemd5("ami-image-builder.tar.gz")
+}
+
+resource "aws_s3_bucket_object" "goss-linux-amd64" {
+  bucket = aws_s3_bucket.artifacts.bucket
+  key    = "builders/goss-linux-amd64"
+  source = "goss-linux-amd64"
+
+  # The filemd5() function is available in Terraform 0.11.12 and later
+  # For Terraform 0.11.11 and earlier, use the md5() function and the file() function:
+  # etag = "${md5(file("path/to/file"))}"
+  etag = filemd5("goss-linux-amd64")
+}
