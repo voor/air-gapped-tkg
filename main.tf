@@ -224,7 +224,7 @@ locals {
     aws_region  = var.region
     ami_regions = var.region
     vpc_id      = aws_vpc.vpc.id
-    subnet_id   = aws_subnet.private_subnet.*.id
+    subnet_id   = element(aws_subnet.private_subnet.*.id, 0)
     ami_groups  = "all"
 
     kubernetes_series      = "v1.17"
