@@ -9,28 +9,32 @@ echo "AMI_ID = ${ami_id}" > /var/log/ami_id
 
 systemctl enable --now docker
 
-cat > /root/variables.json <<'_END'
+groupadd docker || :
+usermod -aG docker ${INSTANCE_USER}
+
+cat > ${INSTANCE_HOME}/variables.json <<'_END'
 ${variables_json}
 _END
 
-cat > /root/load-docker.sh <<'_END'
+cat > ${INSTANCE_HOME}/load-docker.sh <<'_END'
 #!/bin/bash
 set -eux
-curl http://${artifacts_endpoint}/${ami_image_builder} -o - | docker load
+curl -SsL http://${artifacts_endpoint}/${ami_image_builder} -o - | docker load
 
 _END
-chmod +x /root/load-docker.sh
+chmod +x ${INSTANCE_HOME}/load-docker.sh
 
-./root/load-docker.sh
+${INSTANCE_HOME}/load-docker.sh
 
-cat > /root/build-ami.sh <<'_END'
+cat > ${INSTANCE_HOME}/build-ami.sh <<'_END'
 #!/bin/bash
 set -eux
 
 export PACKER_VAR_FILES='-var-file=/tmp/variables.json'
 exec docker run --net host -it --rm --name ami-builder \
-  -v /root/variables.json:/tmp/variables.json \
+  -v ${INSTANCE_HOME}/variables.json:/tmp/variables.json \
+  -v $PWD:/output/ \
   -e PACKER_VAR_FILES \
   ami-image-builder
 _END
-chmod +x /root/build-ami.sh
+chmod +x ${INSTANCE_HOME}/build-ami.sh

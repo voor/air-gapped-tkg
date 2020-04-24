@@ -212,7 +212,7 @@ locals {
 
   kubernetes_rpm_version = "1.17.3-1.el7.vmware.2"
 
-  endpoint = "http://${aws_s3_bucket.artifacts.website_endpoint}/packages"
+  endpoint = "https://${aws_s3_bucket.artifacts.website_endpoint}/packages"
 
   rpms = [
     "${local.endpoint}/rpms/kubeadm-${local.kubernetes_rpm_version}.x86_64.rpm",
@@ -240,7 +240,8 @@ locals {
 
     extra_rpms = "\"${join(" ", local.rpms)}\""
 
-    goss_url = "${local.endpoint}/builders/goss-linux-amd64"
+    goss_url        = "${aws_s3_bucket.artifacts.website_endpoint}/builders/goss-linux-amd64"
+    manifest_output = "/output/ami.json"
   }
 
   templatefile_vars = {
@@ -248,6 +249,8 @@ locals {
     ami_id             = data.aws_ami.amazon_linux_hvm_ami.id
     artifacts_endpoint = aws_s3_bucket.artifacts.website_endpoint
     ami_image_builder  = aws_s3_bucket_object.ami_image_builder.id
+    INSTANCE_USER      = "ec2-user"
+    INSTANCE_HOME      = "/home/ec2-user"
   }
 
 
