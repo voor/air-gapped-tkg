@@ -48,10 +48,12 @@ curl -SsL http://${artifacts_endpoint}/packages/${kind_image} -o - | docker load
 curl -SsL http://${artifacts_endpoint}/packages/${image} -o - | docker load
 %{ endfor ~}
 
+eval $(aws ecr get-login --region ${region} --no-include-email)
+
 COL_ONE=($(docker image list --format "{{.Repository}}:{{.Tag}}" | grep -v ami-image-builder | grep -v kind))
 COL_TWO=($(docker image list --format "{{.Repository}}:{{.Tag}}" | sed 's/registry.tkg.vmware.run/${kubernetes_container_registry}/g' | sed 's/vmware.io/${kubernetes_container_registry}/g' | grep -v ami-image-builder | grep -v kind))
 
-for ((i=0; i<=$${#COL_ONE[@]}; i++)); do
+for ((i=0; i<$${#COL_ONE[@]}; i++)); do
     docker tag "$${COL_ONE[i]}" "$${COL_TWO[i]}"
     docker push "$${COL_TWO[i]}"
 done

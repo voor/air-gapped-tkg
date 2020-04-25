@@ -222,6 +222,11 @@ variable "containers" {
   type        = list
 }
 
+variable "kubernetes_semver" {
+  default     = "v1.17.3_vmware.2"
+  description = "Version of Kubernetes"
+}
+
 variable "image_names" {
   default     = []
   description = "The list images that should be preloaded onto the AMI and accessible at runtime."
@@ -267,12 +272,16 @@ locals {
     ami_groups  = "all"
 
     kubernetes_series      = "v1.17"
-    kubernetes_semver      = "v1.17.3-vmware.2"
+    kubernetes_semver      = var.kubernetes_semver
     kubernetes_rpm_version = local.kubernetes_rpm_version
 
     kubernetes_container_registry = local.kubernetes_container_registry
 
+    containerd_pause_image = "${local.kubernetes_container_registry}/pause:3.1"
+
     kubernetes_source_type = "s3"
+
+    iam_instance_profile = aws_iam_instance_profile.nodes.id
 
     common_redhat_epel_rpm = "${local.endpoint}/rpms/cri-tools-1.16.1-1.el7.vmware.3.x86_64.rpm"
 
@@ -296,6 +305,7 @@ locals {
     image_names                   = var.image_names
     kind_image                    = "kind-v0.7.0-1.17.3+vmware.2/images/node-v1.17.3_vmware.2.tar.gz"
     kubernetes_container_registry = local.kubernetes_container_registry
+    region                        = var.region
   }
 
 

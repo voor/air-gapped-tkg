@@ -18,6 +18,16 @@ Install TKG into an air-gapped situation that has no connectivity to the interne
     availability_zones = ["us-gov-east-1a", "us-gov-east-1b", "us-gov-east-1c"]
 
     key_name = "cluster-api-provider-aws"
+
+    # find . -name "*.tar.gz" -type f | sort -u | xargs -I '{}' basename -s '.tar.gz' {}
+    containers = [
+        # ...
+    ]
+
+    # find . -name "*.tar.gz" -type f | sort -u
+    image_names = [
+        # ...
+    ]
     ```
 1. Download files that are automatically synced into s3 when terraform is run:
     ```shell
@@ -43,14 +53,14 @@ Put the following into the S3 bucket:
  * tkg CLI
 
 ```shell
-# Download the _magic_ file and extract it.
+# Download the _magic_ file and extract it, or speak to your Tanzu Specialist to get the files.
 curl -o - -SsL http://build-squid.eng.vmware.com/build/mts/release/bora-15961092/publish/lin64/tkg_release/vmware-kubernetes-v1.0.0+vmware.1.tar.gz | tar -xzvf -
 aws --profile gov s3 sync vmware-kubernetes-\*/ s3://$(terraform output artifact_bucket)/packages/ --exclude "*.ova" --exclude "*.src.rpm" --exclude "*.deb"
 ```
 
 ## Build the Image
 
-Jump onto the box, load the docker file, and build the AMI:
+Jump onto the box, tag the containers and build the AMI:
 
 ```shell
 # Assumes you have properly configured SSM for ssh tunneling.
@@ -58,8 +68,8 @@ ssh ec2-user@$(terraform output packer_instance_id)
 ```
 
 ```shell
-sudo su -
-./load-docker.sh
+# Make sure you sync the files prior to running this.
+./tag-containers.sh
 ./build-ami.sh
 ```
 
