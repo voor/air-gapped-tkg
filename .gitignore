@@ -29,3 +29,4 @@ tkg_release/
 ami-image-builder.tar.gz
 goss-linux-amd64
 vmware-kubernetes-*+vmware*/
+ytt-linux-amd64

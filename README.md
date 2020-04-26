@@ -34,6 +34,7 @@ Install TKG into an air-gapped situation that has no connectivity to the interne
     docker build -t ami-image-builder -f ami-builder.dockerfile . \
     && docker save ami-image-builder | gzip > ami-image-builder.tar.gz
     curl -O -SsL https://github.com/aelsabbahy/goss/releases/download/v0.3.2/goss-linux-amd64
+    curl -O -SsL https://github.com/k14s/ytt/releases/download/v0.27.1/ytt-linux-amd64
     ```
 1. Run terraform:
     ```shell

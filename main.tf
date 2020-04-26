@@ -26,8 +26,7 @@ variable "region" {
 }
 
 variable "key_name" {
-  default = ""
-  type    = string
+  type = string
 }
 
 variable "tags" {
@@ -223,7 +222,7 @@ variable "containers" {
 }
 
 variable "kubernetes_semver" {
-  default     = "v1.17.3_vmware.2"
+  default     = "v1.17.3+vmware.2"
   description = "Version of Kubernetes"
 }
 
@@ -259,10 +258,11 @@ locals {
   endpoint = "http://${aws_s3_bucket.artifacts.website_endpoint}/packages"
 
   rpms = [
+    "${local.endpoint}/rpms/cri-tools-1.16.1-1.el7.vmware.3.x86_64.rpm",
     "${local.endpoint}/rpms/kubeadm-${local.kubernetes_rpm_version}.x86_64.rpm",
     "${local.endpoint}/rpms/kubectl-${local.kubernetes_rpm_version}.x86_64.rpm",
     "${local.endpoint}/rpms/kubelet-${local.kubernetes_rpm_version}.x86_64.rpm",
-    "${local.endpoint}/rpms/kubernetes-cni-0.7.5-1.el7.vmware.6.x86_64.rpm",
+    "${local.endpoint}/rpms/kubernetes-cni-0.7.5-1.el7.vmware.6.x86_64.rpm"
   ]
   variables_json = {
     aws_region  = var.region
@@ -281,9 +281,11 @@ locals {
 
     kubernetes_source_type = "s3"
 
-    iam_instance_profile = aws_iam_instance_profile.nodes.id
+    # Need to do a workaround until this becomes available to skip.
+    # iam_instance_profile = aws_iam_instance_profile.nodes.id
 
-    common_redhat_epel_rpm = "${local.endpoint}/rpms/cri-tools-1.16.1-1.el7.vmware.3.x86_64.rpm"
+    # Obviously the kernel is installed so this is essentially a no-op.
+    common_redhat_epel_rpm = "kernel"
 
     containerd_url    = "${local.endpoint}/containerd-v1.3.3+vmware.1/executables/cri-containerd-v1.3.3+vmware.1.linux-amd64.tar.gz"
     containerd_sha256 = "4aed1fd2803525b84700ac427c10e8b7cf0766cc71bc470ff564785432ddf550"
@@ -292,20 +294,29 @@ locals {
 
     goss_url        = "${aws_s3_bucket.artifacts.website_endpoint}/builders/goss-linux-amd64"
     manifest_output = "/output/ami.json"
+
+    ecr_b64AuthorizationToken = "ECR_B64AUTHORIZATIONTOKEN"
   }
 
   templatefile_vars = {
-    variables_json                = jsonencode(local.variables_json)
-    ami_id                        = data.aws_ami.amazon_linux_hvm_ami.id
-    artifacts_endpoint            = aws_s3_bucket.artifacts.website_endpoint
-    ami_image_builder             = aws_s3_bucket_object.ami_image_builder.id
-    INSTANCE_USER                 = "ec2-user"
-    INSTANCE_HOME                 = "/home/ec2-user"
-    containers                    = var.containers
-    image_names                   = var.image_names
+    variables_json = jsonencode(local.variables_json)
+
+    ami_id             = data.aws_ami.amazon_linux_hvm_ami.id
+    artifacts_endpoint = aws_s3_bucket.artifacts.website_endpoint
+    ami_image_builder  = aws_s3_bucket_object.ami_image_builder.id
+    ytt                = aws_s3_bucket_object.ytt.id
+    vpc_id             = aws_vpc.vpc.id
+
+    INSTANCE_USER = "ec2-user"
+    INSTANCE_HOME = "/home/ec2-user"
+
     kind_image                    = "kind-v0.7.0-1.17.3+vmware.2/images/node-v1.17.3_vmware.2.tar.gz"
     kubernetes_container_registry = local.kubernetes_container_registry
-    region                        = var.region
+
+    containers  = var.containers
+    image_names = var.image_names
+    region      = var.region
+    key_name    = var.key_name
   }
 
 
@@ -385,4 +396,15 @@ resource "aws_s3_bucket_object" "goss-linux-amd64" {
   # For Terraform 0.11.11 and earlier, use the md5() function and the file() function:
   # etag = "${md5(file("path/to/file"))}"
   etag = filemd5("goss-linux-amd64")
+}
+
+resource "aws_s3_bucket_object" "ytt" {
+  bucket = aws_s3_bucket.artifacts.bucket
+  key    = "builders/ytt-linux-amd64"
+  source = "ytt-linux-amd64"
+
+  # The filemd5() function is available in Terraform 0.11.12 and later
+  # For Terraform 0.11.11 and earlier, use the md5() function and the file() function:
+  # etag = "${md5(file("path/to/file"))}"
+  etag = filemd5("ytt-linux-amd64")
 }

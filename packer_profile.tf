@@ -91,6 +91,22 @@ data "aws_iam_policy_document" "packer" {
     effect = "Allow"
 
   }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["iam:GetInstanceProfile"]
+    resources = [aws_iam_instance_profile.packer.arn, 
+      aws_iam_instance_profile.nodes.arn]
+  }
+
+  statement {
+    effect  = "Allow"
+    actions = ["iam:PassRole"]
+    resources = [
+      aws_iam_role.nodes.arn
+    ]
+  }
+
 }
 
 resource "aws_iam_policy" "packer" {
@@ -112,6 +128,12 @@ resource "aws_iam_role_policy_attachment" "packer-packer" {
   role       = aws_iam_role.packer.name
   policy_arn = aws_iam_policy.packer.arn
 }
+
+resource "aws_iam_role_policy_attachment" "packer-controllers" {
+  role       = aws_iam_role.packer.name
+  policy_arn = aws_iam_policy.controllers.arn
+}
+
 
 resource "aws_iam_instance_profile" "packer" {
   name = "packer.image-builder.sigs.k8s.io"
