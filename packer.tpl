@@ -189,7 +189,7 @@ export CONTROL_PLANE_MACHINE_TYPE=t3.large
 export NODE_MACHINE_TYPE=t3.large
 export CLUSTER_CIDR="100.96.0.0/11"
 
-tkg init -i aws -p private
+tkg $@
 
 _END
 chmod +x ${INSTANCE_HOME}/run.sh

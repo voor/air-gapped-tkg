@@ -32,7 +32,7 @@ Install TKG into an air-gapped situation that has no connectivity to the interne
 1. Download files that are automatically synced into s3 when terraform is run:
     ```shell
     docker build -t ami-image-builder -f ami-builder.dockerfile . \
-    && docker save ami-image-builder | gzip > ami-image-builder.tar.gz
+      && docker save ami-image-builder | gzip > ami-image-builder.tar.gz
     curl -O -SsL https://github.com/aelsabbahy/goss/releases/download/v0.3.2/goss-linux-amd64
     curl -O -SsL https://github.com/k14s/ytt/releases/download/v0.27.1/ytt-linux-amd64
     ```
@@ -75,5 +75,7 @@ ssh ec2-user@$(terraform output packer_instance_id)
 ./grab-artifacts.sh
 ./run-once.sh
 ./build-ami.sh
+./run.sh init -i aws -p private
+./run.sh create cluster stayathome -p private -c 3 -w 4
 ```
 
