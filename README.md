@@ -56,7 +56,9 @@ Put the following into the S3 bucket:
 ```shell
 # Download the _magic_ file and extract it, or speak to your Tanzu Specialist to get the files.
 curl -o - -SsL http://build-squid.eng.vmware.com/build/mts/release/bora-15961092/publish/lin64/tkg_release/vmware-kubernetes-v1.0.0+vmware.1.tar.gz | tar -xzvf -
-aws --profile gov s3 sync vmware-kubernetes-\*/ s3://$(terraform output artifact_bucket)/packages/ --exclude "*.ova" --exclude "*.src.rpm" --exclude "*.deb"
+aws --profile gov s3 sync vmware-kubernetes-v1.0.0+vmware.1 s3://$(terraform output artifact_bucket)/packages/ --exclude "*.ova" --exclude "*.src.rpm" --exclude "*.deb"
+# Sync up special TKG CLI that allows government regions and overriding the AMI ID.
+aws --profile gov s3 cp blahblah s3://$(terraform output artifact_bucket)/packages/tanzu_tkg-cli-v1.0.0+vmware.1/executables/tkg-linux-amd64-v1.0.0+vmware.1.gov.gz
 ```
 
 ## Build the Image
