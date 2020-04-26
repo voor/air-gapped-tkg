@@ -75,6 +75,27 @@ resource "aws_vpc_endpoint" "ec2" {
   security_group_ids  = [aws_security_group.infrastructure_security_group.id]
 }
 
+resource "aws_vpc_endpoint" "elasticloadbalancing" {
+
+  vpc_id              = aws_vpc.vpc.id
+  service_name        = "com.amazonaws.${var.region}.elasticloadbalancing"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = aws_subnet.private_subnet.*.id
+  private_dns_enabled = true
+  security_group_ids  = [aws_security_group.infrastructure_security_group.id]
+}
+
+resource "aws_vpc_endpoint" "secretsmanager" {
+
+  vpc_id              = aws_vpc.vpc.id
+  service_name        = "com.amazonaws.${var.region}.secretsmanager"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = aws_subnet.private_subnet.*.id
+  private_dns_enabled = true
+  security_group_ids  = [aws_security_group.infrastructure_security_group.id]
+}
+
+
 resource "aws_vpc_endpoint" "ec2messages" {
 
   vpc_id              = aws_vpc.vpc.id
@@ -235,6 +256,8 @@ variable "image_names" {
 resource "aws_ecr_repository" "kubernetes_container_registry" {
   count = length(var.containers)
   name  = basename(element(var.containers, count.index))
+
+  image_tag_mutability = "IMMUTABLE"
 }
 
 /*
@@ -250,10 +273,8 @@ data "aws_ami" "amazon_linux_hvm_ami" {
 
 locals {
 
-
-
   kubernetes_rpm_version        = "1.17.3-1.el7.vmware.2"
-  kubernetes_container_registry = "${element(aws_ecr_repository.kubernetes_container_registry, 0).registry_id}.dkr.ecr.${var.region}.amazonaws.com"
+  kubernetes_container_registry = "${element(aws_ecr_repository.kubernetes_container_registry.*.registry_id, 0)}.dkr.ecr.${var.region}.amazonaws.com"
 
   endpoint = "http://${aws_s3_bucket.artifacts.website_endpoint}/packages"
 
@@ -348,6 +369,12 @@ resource "aws_instance" "packer" {
     volume_type = "gp2"
     volume_size = 150
   }
+
+  tags = merge(
+    var.tags,
+    { "Name" = "${var.environment_name}-jumpbox-builder" },
+  )
+
 
 }
 

@@ -103,7 +103,9 @@ data "aws_iam_policy_document" "packer" {
     effect  = "Allow"
     actions = ["iam:PassRole"]
     resources = [
-      aws_iam_role.nodes.arn
+      aws_iam_role.nodes.arn,
+      aws_iam_role.controllers.arn,
+      aws_iam_role.control-plane.arn
     ]
   }
 

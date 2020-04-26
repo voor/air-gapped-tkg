@@ -111,7 +111,45 @@ cat > ${INSTANCE_HOME}/grab-artifacts.sh <<'_END'
 #!/bin/bash
 set -eux
 
+mkdir -p ~/bin
+
+curl -SsL http://${artifacts_endpoint}/packages/tanzu_tkg-cli-v1.0.0+vmware.1/executables/tkg-linux-amd64-v1.0.0+vmware.1.gov.gz -o - | gunzip > ~/bin/tkg
+chmod +x ~/bin/tkg
+tkg version
+curl -SsL http://${artifacts_endpoint}/packages/kubernetes-v1.17.3+vmware.2/executables/kubectl-linux-v1.17.3+vmware.2.gz -o - | gunzip > ~/bin/kubectl
+chmod +x ~/bin/kubectl
+kubectl version --client
+
+tkg get mc
+
+set +e
+find ${INSTANCE_HOME}/.tkg/ -type f -name "*.yaml" -print0 | xargs -0 sed -i '' -e 's/registry.tkg.vmware.run/${kubernetes_container_registry}/g'
+
+#### ECR specific stuff since ECR UX is terrible.
+# remove sub-directories -- this ECR specific.
+for pattern in cluster-api cert-manager calico-all ccm csi; do
+  find ${INSTANCE_HOME}/.tkg/ -type f -name "*.yaml" -print0 | xargs -0 sed -i '' -e "s|${kubernetes_container_registry}/$${pattern}/|${kubernetes_container_registry}/|g"
+done
+set -e
+
+#### ECR specific stuff since ECR UX is terrible.
+# cert-manager reference in config.
+sed -i ${INSTANCE_HOME}/.tkg/config.yaml -e "s|${kubernetes_container_registry}/cert-manager|${kubernetes_container_registry}|g"
+
+# Create plan for 
+ytt --ignore-unknown-comments \
+  -f /home/ec2-user/.tkg/providers/infrastructure-aws/v0.5.2/cluster-template-dev.yaml \
+  -f overlay-vpc.yaml > ~/.tkg/providers/infrastructure-aws/v0.5.2/cluster-template-private.yaml
+
 curl -SsL http://${artifacts_endpoint}/packages/${kind_image} -o - | docker load
+_END
+chmod +x ${INSTANCE_HOME}/grab-artifacts.sh
+
+cat > ${INSTANCE_HOME}/run-once.sh <<'_END'
+#!/bin/bash
+set -eux
+echo "This part of the script is not idempotent, if you are running this again bad things happen."
+
 %{ for image in image_names ~}
 curl -SsL http://${artifacts_endpoint}/packages/${image} -o - | docker load
 %{ endfor ~}
@@ -126,28 +164,10 @@ for ((i=0; i<$${#COL_ONE[@]}; i++)); do
     docker push "$${COL_TWO[i]}"
 done
 
-mkdir -p ~/bin
-
-curl -SsL http://${artifacts_endpoint}/packages/tanzu_tkg-cli-v1.0.0+vmware.1/executables/tkg-linux-amd64-v1.0.0+vmware.1.gov.gz -o - | gunzip > ~/bin/tkg
-chmod +x ~/bin/tkg
-tkg version
-curl -SsL http://${artifacts_endpoint}/packages/kubernetes-v1.17.3+vmware.2/executables/kubectl-linux-v1.17.3+vmware.2.gz -o - | gunzip > ~/bin/kubectl
-chmod +x ~/bin/kubectl
-kubectl version
-
-tkg get mc
-
-find ${INSTANCE_HOME}/.tkg/ -type f -name "*.yaml" -print0 | xargs -0 sed -i '' -e 's/registry.tkg.vmware.run/${kubernetes_container_registry}/g'
-
-# cert-manager is not in a sub-directory -- this ECR specific.
-for pattern in cluster-api cert-manager calico-all ccm csi; do
-  find ${INSTANCE_HOME}/.tkg/ -type f -name "*.yaml" -print0 | xargs -0 sed -i '' -e "s|${kubernetes_container_registry}/$${pattern}/|${kubernetes_container_registry}/|g"
-done
-
-ytt --ignore-unknown-comments -f /home/ec2-user/.tkg/providers/infrastructure-aws/v0.5.2/cluster-template-dev.yaml -f overlay-vpc.yaml
-
+rm -rf ${INSTANCE_HOME}/run-once.sh
 _END
-chmod +x ${INSTANCE_HOME}/grab-artifacts.sh
+chmod +x ${INSTANCE_HOME}/run-once.sh
+chown ec2-user ${INSTANCE_HOME}/run-once.sh
 
 cat > ${INSTANCE_HOME}/run.sh <<'_END'
 #!/bin/bash
@@ -169,7 +189,7 @@ export CONTROL_PLANE_MACHINE_TYPE=t3.large
 export NODE_MACHINE_TYPE=t3.large
 export CLUSTER_CIDR="100.96.0.0/11"
 
-tkg init -i aws
+tkg init -i aws -p private
 
 _END
 chmod +x ${INSTANCE_HOME}/run.sh

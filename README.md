@@ -70,7 +70,8 @@ ssh ec2-user@$(terraform output packer_instance_id)
 
 ```shell
 # Make sure you sync the files prior to running this.
-./tag-containers.sh
+./grab-artifacts.sh
+./run-once.sh
 ./build-ami.sh
 ```
 
