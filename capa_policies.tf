@@ -24,7 +24,7 @@ data "aws_iam_policy_document" "nodes" {
       "secretsmanager:GetSecretValue"
     ]
     resources = [
-      "arn:aws-us-gov:secretsmanager:*:*:secret:aws.cluster.x-k8s.io/*"
+      "arn:${data.aws_partition.current.partition}:secretsmanager:*:*:secret:aws.cluster.x-k8s.io/*" # This is hard-coded to the GOV partition.
     ]
     effect = "Allow"
 
@@ -127,7 +127,7 @@ data "aws_iam_policy_document" "controllers" {
       "iam:CreateServiceLinkedRole"
     ]
     resources = [
-      "arn:aws-us-gov:iam::894844345642:role/aws-service-role/elasticloadbalancing.amazonaws.com/AWSServiceRoleForElasticLoadBalancing"
+      "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/elasticloadbalancing.amazonaws.com/AWSServiceRoleForElasticLoadBalancing"
     ]
     effect = "Allow"
   }
@@ -136,7 +136,7 @@ data "aws_iam_policy_document" "controllers" {
       "iam:PassRole"
     ]
     resources = [
-      "arn:aws-us-gov:iam::894844345642:role/*.cluster-api-provider-aws.sigs.k8s.io"
+      "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/*.cluster-api-provider-aws.sigs.k8s.io"
     ]
     effect = "Allow"
   }
@@ -147,7 +147,7 @@ data "aws_iam_policy_document" "controllers" {
       "secretsmanager:TagResource"
     ]
     resources = [
-      "arn:aws-us-gov:secretsmanager:*:*:secret:aws.cluster.x-k8s.io/*"
+      "arn:${data.aws_partition.current.partition}:secretsmanager:*:*:secret:aws.cluster.x-k8s.io/*"
     ]
     effect = "Allow"
   }
@@ -254,10 +254,10 @@ data "aws_iam_policy_document" "cds-endpoint-policy" {
       "*"
     ]
     resources = [
-      "arn:aws-us-gov:s3:::${var.environment_name}-packages-artifacts-${random_string.bucket_suffix.result}",
-      "arn:aws-us-gov:s3:::${var.environment_name}-packages-artifacts-${random_string.bucket_suffix.result}/*",
-      "arn:aws-us-gov:s3:::amazonlinux.${var.region}.amazonaws.com",
-      "arn:aws-us-gov:s3:::amazonlinux.${var.region}.amazonaws.com/*"
+      "arn:${data.aws_partition.current.partition}:s3:::${var.environment_name}-packages-artifacts-${random_string.bucket_suffix.result}",
+      "arn:${data.aws_partition.current.partition}:s3:::${var.environment_name}-packages-artifacts-${random_string.bucket_suffix.result}/*",
+      "arn:${data.aws_partition.current.partition}:s3:::amazonlinux.${var.region}.amazonaws.com",
+      "arn:${data.aws_partition.current.partition}:s3:::amazonlinux.${var.region}.amazonaws.com/*"
     ]
     effect = "Allow"
   }
@@ -275,8 +275,8 @@ data "aws_iam_policy_document" "s3_artifacts_policy" {
       "s3:*"
     ]
     resources = [
-      "arn:aws-us-gov:s3:::${var.environment_name}-packages-artifacts-${random_string.bucket_suffix.result}/*",
-      "arn:aws-us-gov:s3:::${var.environment_name}-packages-artifacts-${random_string.bucket_suffix.result}",
+      "arn:${data.aws_partition.current.partition}:s3:::${var.environment_name}-packages-artifacts-${random_string.bucket_suffix.result}/*",
+      "arn:${data.aws_partition.current.partition}:s3:::${var.environment_name}-packages-artifacts-${random_string.bucket_suffix.result}",
     ]
     condition {
       test     = "StringEquals"
