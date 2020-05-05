@@ -7,9 +7,10 @@ groupadd docker || :
 usermod -aG docker ${INSTANCE_USER}
 
 
+# FIXME SSM not available take me out.
 systemctl enable --now amazon-ssm-agent 
 
-sudo yum -y install docker awscli perl jq
+sudo yum -y install docker awscli jq
 
 echo "AMI_ID = ${ami_id}" > /var/log/ami_id
 

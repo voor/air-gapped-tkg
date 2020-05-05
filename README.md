@@ -20,11 +20,13 @@ Install TKG into an air-gapped situation that has no connectivity to the interne
     key_name = "cluster-api-provider-aws"
 
     # find . -name "*.tar.gz" -type f | sort -u | xargs -I '{}' basename -s '.tar.gz' {}
+    # That's not the command, message me to get the actual lists.  This has to be exact.
     containers = [
         # ...
     ]
 
     # find . -name "*.tar.gz" -type f | sort -u
+    # That's not the command, message me to get the actual lists.  This has to be exact.
     image_names = [
         # ...
     ]
