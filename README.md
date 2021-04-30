@@ -24,3 +24,7 @@ Install TKG into an air-gapped situation that has no connectivity to the interne
     terraform plan -out=main.tfplan
     terraform apply "main.tfplan"
     ```
+1. Launch an instance into this VPC and make sure to give it a role with the AWS CAPA controller manager (for OSS this is `controllers.cluster-api-provider-aws.sigs.k8s.io`)
+1. This role should also allow AWS SSM access, which is the easiest way to get into this environment without a lot of complex AWS transit gateway or AWS peering stuff.
+1. You will need to copy files into S3 and then access them from S3 due to the closed off nature of the VPC (unless you were able to peer it into another network).
+1. Good luck.
