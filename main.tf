@@ -48,5 +48,5 @@ resource "aws_security_group" "infrastructure_security_group" {
     to_port     = 0
   }
 
-  tags = merge(var.tags, map("Name", "${var.environment_name}-infrastructure-security-group"))
+  tags = merge(var.tags, tomap({"Name" = "${var.environment_name}-infrastructure-security-group"}))
 }

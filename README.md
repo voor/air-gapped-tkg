@@ -13,6 +13,7 @@ Install TKG into an air-gapped situation that has no connectivity to the interne
     ```
     environment_name = "gapped"
 
+    # NOTE: Update gov regions if not in GovCloud
     region = "us-gov-east-1"
     availability_zones = ["us-gov-east-1a", "us-gov-east-1b", "us-gov-east-1c"]
 
